@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EC2 Image Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>EC2 Image Manager</h1>
+        
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Upload Section -->
+        <div class="card">
+            <h2>Upload New Image</h2>
+            <form method="POST" action="/upload" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".jpg,.jpeg,.png,.gif" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+        
+        <!-- Image Gallery -->
+        <div class="card">
+            <h2>Stored Images</h2>
+            <div class="gallery">
+                {% for image in images %}
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}">
+                        </div>
+                        <div class="image-info">
+                            <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
+                                {{ image }}
+                            </a>
+                            <div class="actions">
+                                <a href="{{ url_for('serve_image', filename=image) }}" download>
+                                    <button>Download</button>
+                                </a>
+                                <a href="{{ url_for('delete_file', filename=image) }}">
+                                    <button class="delete">Delete</button>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p>No images uploaded yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
