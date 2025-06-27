@@ -98,14 +98,17 @@ def login():
         password = request.form['password']
         remember = 'remember' in request.form
         
-        user = users.get(username)
-        if user and check_password_hash(user['password'], password):
-            user['remember'] = remember
+        users = load_users()
+        password_hash = users.get(username)
+        
+        if password_hash and check_password_hash(password_hash, password):
             login_user(User(username), remember=remember)
             flash('Login successful!', 'success')
             return redirect(url_for('index'))
+        
         flash('Invalid credentials', 'error')
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
@@ -174,4 +177,5 @@ def delete_file(filename):
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
+    load_users()  # Load users at startup
     app.run(host='0.0.0.0', port=80, debug=True)
