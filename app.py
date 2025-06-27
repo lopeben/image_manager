@@ -135,10 +135,13 @@ def serve_image_b64(filename):
         return jsonify({
             "filename": filename,
             "mime_type": mime_type,
-            "data": f"data:{mime_type};base64,{encoded_string}"
+            "data": f"data:{mime_type};base64,{encoded_string}",
+            # Add direct URL to base64 data
+            "direct_url": url_for('serve_image_b64', filename=filename, _external=True)
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/uploads/<filename>')
 @login_required

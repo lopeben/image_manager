@@ -229,3 +229,56 @@ button.logout {
         height: 150px;
     }
 }
+
+/* Base64 Actions */
+.base64-actions {
+    margin: 15px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.base64-actions button {
+    flex: 1;
+    min-width: 120px;
+}
+
+.direct-url-container {
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    gap: 5px;
+}
+
+.direct-url-container input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.direct-url-container button {
+    padding: 8px 12px;
+    font-size: 14px;
+    background: #2ecc71;
+}
+
+.direct-url-container button:hover {
+    background: #27ae60;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .base64-actions {
+        flex-direction: column;
+    }
+    
+    .base64-actions button {
+        width: 100%;
+    }
+    
+    .direct-url-container {
+        flex-direction: column;
+    }
+}
