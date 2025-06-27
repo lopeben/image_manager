@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif', 'b64'}
 app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
 app.secret_key = 'your_secret_key_here'
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
