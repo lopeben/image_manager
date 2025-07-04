@@ -5,51 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script>
-        // Function to copy base64 data to clipboard
-        function copyBase64(filename) {
-            fetch(`/b64image/${filename}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.data) {
-                        navigator.clipboard.writeText(data.data)
-                            .then(() => {
-                                alert('Base64 data copied to clipboard!');
-                            })
-                            .catch(err => {
-                                console.error('Failed to copy: ', err);
-                                alert('Failed to copy to clipboard');
-                            });
-                    } else {
-                        alert('Error: ' + (data.error || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to get base64 data');
-                });
-        }
-        
-        // Function to show/hide direct URL
-        function toggleDirectUrl(element, filename) {
-            const container = element.nextElementSibling;
-            if (container.style.display === 'none') {
-                fetch(`/b64image/${filename}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.direct_url) {
-                            container.innerHTML = `
-                                <input type="text" value="${data.direct_url}" readonly>
-                                <button onclick="copyDirectUrl(this)">Copy URL</button>
-                            `;
-                            container.style.display = 'block';
-                        }
-                    });
-            } else {
-                container.style.display = 'none';
-            }
-        }
-        
+    <script>        
         // Function to copy direct URL
         function copyDirectUrl(button) {
             const input = button.previousElementSibling;
@@ -102,13 +58,6 @@
                             <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
                                 {{ image }}
                             </a>
-                            
-                            <!-- Base64 Actions -->
-                            <div class="base64-actions">
-                                <button onclick="copyBase64('{{ image }}')">Copy Base64 Data</button>
-                                <button onclick="toggleDirectUrl(this, '{{ image }}')">Show Direct URL</button>
-                                <div class="direct-url-container" style="display: none;"></div>
-                            </div>
                             
                             <div class="actions">
                                 <a href="{{ url_for('serve_image', filename=image) }}" download>

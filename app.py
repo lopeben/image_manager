@@ -118,31 +118,6 @@ def logout():
     return redirect(url_for('login'))
 
 
-# New route for base64 image encoding
-@app.route('/b64image/<filename>')
-@login_required
-def serve_image_b64(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    
-    if not os.path.isfile(file_path):
-        return jsonify({"error": "File not found"}), 404
-    
-    try:
-        with open(file_path, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-        
-        mime_type = get_image_mime_type(filename)
-        return jsonify({
-            "filename": filename,
-            "mime_type": mime_type,
-            "data": f"data:{mime_type};base64,{encoded_string}",
-            # Add direct URL to base64 data
-            "direct_url": url_for('serve_image_b64', filename=filename, _external=True)
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 @app.route('/uploads/<filename>')
 @login_required
 def serve_image(filename):
