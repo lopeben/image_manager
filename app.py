@@ -1,10 +1,10 @@
 import os
-import base64
 import secrets
 import string
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -72,6 +72,16 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 # New function to get image MIME type
+# def get_image_mime_type(filename):
+#     ext = filename.split('.')[-1].lower()
+#     if ext == 'png':
+#         return 'image/png'
+#     elif ext in ['jpg', 'jpeg']:
+#         return 'image/jpeg'
+#     elif ext == 'gif':
+#         return 'image/gif'
+#     return 'application/octet-stream'
+
 def get_image_mime_type(filename):
     ext = filename.split('.')[-1].lower()
     if ext == 'png':
@@ -80,6 +90,8 @@ def get_image_mime_type(filename):
         return 'image/jpeg'
     elif ext == 'gif':
         return 'image/gif'
+    elif ext == 'txt':
+        return 'text/plain'
     return 'application/octet-stream'
 
 @app.route('/')
@@ -118,31 +130,90 @@ def logout():
     return redirect(url_for('login'))
 
 
+# @app.route('/uploads/<filename>')
+# @login_required
+# def serve_image(filename):
+#     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 @app.route('/uploads/<filename>')
 @login_required
 def serve_image(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+    mime_type = get_image_mime_type(filename)
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, mimetype=mime_type)
 
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     if 'file' not in request.files:
+#         flash('No file part', 'error')
+#         return redirect(url_for('index'))
+    
+#     file = request.files['file']
+    
+#     if file.filename == '':
+#         flash('No selected file', 'error')
+#         return redirect(url_for('index'))
+    
+#     if file and allowed_file(file.filename):
+#         filename = file.filename
+#         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+#         flash(f'Uploaded: {filename}', 'success')
+#         return redirect(url_for('index'))
+#     else:
+#         flash('Allowed file types: jpg, jpeg, png, gif', 'error')
+#         return redirect(url_for('index'))
+    
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'file' not in request.files:
+    if 'files' not in request.files:
         flash('No file part', 'error')
         return redirect(url_for('index'))
     
-    file = request.files['file']
-    
-    if file.filename == '':
-        flash('No selected file', 'error')
-        return redirect(url_for('index'))
-    
-    if file and allowed_file(file.filename):
-        filename = file.filename
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        flash(f'Uploaded: {filename}', 'success')
-        return redirect(url_for('index'))
-    else:
-        flash('Allowed file types: jpg, jpeg, png, gif', 'error')
-        return redirect(url_for('index'))
+    files = request.files.getlist('files')
+    success_count = 0
+    failure_count = 0
+
+    for file in files:
+        if file.filename == '':
+            failure_count += 1
+            continue
+        
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            if not filename:
+                failure_count += 1
+                continue
+            
+            target_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            
+            # Handle filename conflicts
+            if os.path.exists(target_path):
+                base, ext = os.path.splitext(filename)
+                counter = 1
+                while True:
+                    new_filename = f"{base}_{counter}{ext}"
+                    new_target = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                    if not os.path.exists(new_target):
+                        filename = new_filename
+                        target_path = new_target
+                        break
+                    counter += 1
+            
+            try:
+                file.save(target_path)
+                success_count += 1
+            except Exception as e:
+                app.logger.error(f"Error saving file {filename}: {str(e)}")
+                failure_count += 1
+        else:
+            failure_count += 1
+
+    # Summary messages
+    if success_count > 0:
+        flash(f'Successfully uploaded {success_count} file(s)', 'success')
+    if failure_count > 0:
+        flash(f'Failed to upload {failure_count} file(s). Allowed file types: jpg, jpeg, png, gif, b64', 'error')
+
+    return redirect(url_for('index'))
 
 @app.route('/delete/<filename>')
 def delete_file(filename):

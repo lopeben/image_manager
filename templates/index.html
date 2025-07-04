@@ -40,7 +40,9 @@
         <div class="card">
             <h2>Upload New Image</h2>
             <form method="POST" action="/upload" enctype="multipart/form-data">
-                <input type="file" name="file" accept=".jpg,.jpeg,.png,.gif" required>
+                <!-- <input type="file" name="file" accept=".jpg,.jpeg,.png,.gif" required> -->
+                <!-- Replace the existing file input with this -->
+                <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.gif,.txt" required>
                 <button type="submit">Upload</button>
             </form>
         </div>
@@ -51,20 +53,32 @@
             <div class="gallery">
                 {% for image in images %}
                     <div class="image-card">
+                        <!-- 1. Image Display -->
                         <div class="image-container">
                             <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}">
                         </div>
+
+                        <!-- 2. Image Information & Actions -->
                         <div class="image-info">
+                            <!-- 2a. Filename Link -->
                             <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
                                 {{ image }}
                             </a>
                             
+                            <!-- 2b. Action Buttons -->
                             <div class="actions">
+                                <!-- Download Button -->
                                 <a href="{{ url_for('serve_image', filename=image) }}" download>
                                     <button>Download</button>
                                 </a>
-                                <a href="{{ url_for('delete_file', filename=image) }}">
+                                <!-- Delete Button -->
+                                <!-- <a href="{{ url_for('delete_file', filename=image) }}">
+                                    onclick="return confirm('Permanently delete {{ image }}?')">
                                     <button class="delete">Delete</button>
+                                </a> -->
+                                <!-- Delete Button Section -->
+                                <a href="{{ url_for('delete_file', filename=image) }}">
+                                    <button class="delete" onclick="return confirm('Permanently delete \'{{ image }}\'?')">Delete</button>
                                 </a>
                             </div>
                         </div>
@@ -75,5 +89,14 @@
             </div>
         </div>
     </div>
+    <script>
+        // Add confirmation to all delete buttons
+        document.querySelectorAll('.delete').forEach(button => {
+            button.onclick = function(e) {
+                const filename = this.closest('.image-card').querySelector('a').innerText;
+                return confirm(`Permanently delete ${filename}?`);
+            };
+        });
+    </script>
 </body>
 </html>

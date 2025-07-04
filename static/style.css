@@ -282,3 +282,25 @@ button.logout {
         flex-direction: column;
     }
 }
+
+/* Add to style.css */
+@media (max-width: 768px) {
+    .delete {
+        padding: 10px 14px;
+        font-size: 16px;
+    }
+    
+    /* Make confirm dialogs readable */
+    ::backdrop {
+        /* background: rgba(0,0,0,0.5); */
+        background: rgba(166, 42, 42, 0.5);
+    }
+    
+    dialog {
+        width: 80vw;
+        max-width: 300px;
+        font-size: 18px;
+        padding: 20px;
+        border-radius: 12px;
+    }
+}
