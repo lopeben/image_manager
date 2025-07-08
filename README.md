@@ -11,9 +11,10 @@ After initial setup, follow these security best practices:
 # Generate new password hash
 from werkzeug.security import generate_password_hash
 
+username = "user1"
 new_password = "my_super_strong_password"
 password_hash = generate_password_hash(new_password)
-print(password_hash)
+print(f"{username}:{password_hash}")
 ```
 
 2. **Update Credentials File**:

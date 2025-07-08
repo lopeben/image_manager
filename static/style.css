@@ -124,6 +124,26 @@ button.logout {
     align-items: center;
 }
 
+/* NEW: Password toggle styles */
+.password-wrapper {
+    position: relative;
+}
+.password-toggle {
+    position: absolute;
+    right: 0%;
+    top: 36%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #777;
+    background: none;
+    border: none;
+}
+.password-toggle:hover {
+    color: #333333;
+    /* FIX: Ensure background stays transparent on hover */
+    background: transparent !important;
+}
+
 /* Gallery */
 .gallery {
     display: grid;

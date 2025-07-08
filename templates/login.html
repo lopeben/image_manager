@@ -5,6 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Image Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- NEW: Add Font Awesome for eye icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- <style>
+        /* NEW: Password toggle styles */
+        .password-wrapper {
+            position: relative;
+        }
+        .password-toggle {
+            position: absolute;
+            right: 0%;
+            top: 36%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+            background: none;
+            border: none;
+        }
+        .password-toggle:hover {
+            color: #333;
+        }
+    </style> -->
 </head>
 <body>
     <div class="container login-container">
@@ -24,7 +45,13 @@
             <h2>Login</h2>
             <form method="POST" action="/login">
                 <input type="text" name="username" placeholder="Username" required autocomplete="username">
-                <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+                <!-- NEW: Password field with toggle -->
+                <div class="password-wrapper">
+                    <input type="password" name="password" id="password" placeholder="Password" required autocomplete="current-password">
+                    <button type="button" class="password-toggle" id="passwordToggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
                 <label class="remember">
                     <input type="checkbox" name="remember">
                     Remember me
@@ -33,5 +60,21 @@
             </form>
         </div>
     </div>
+
+    <!-- NEW: JavaScript for password toggle -->
+    <script>
+        document.getElementById('passwordToggle').addEventListener('click', function() {
+            const passwordField = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    </script>
 </body>
 </html>

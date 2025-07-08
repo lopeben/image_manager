@@ -13,13 +13,6 @@ app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
 app.secret_key = 'your_secret_key_here'
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
 
-# Dummy user database (replace with real DB in production)
-# users = {
-#     "admin": {
-#         "password": generate_password_hash("admin_password"),
-#         "remember": False
-#     }
-# }
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -71,16 +64,6 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-# New function to get image MIME type
-# def get_image_mime_type(filename):
-#     ext = filename.split('.')[-1].lower()
-#     if ext == 'png':
-#         return 'image/png'
-#     elif ext in ['jpg', 'jpeg']:
-#         return 'image/jpeg'
-#     elif ext == 'gif':
-#         return 'image/gif'
-#     return 'application/octet-stream'
 
 def get_image_mime_type(filename):
     ext = filename.split('.')[-1].lower()
@@ -130,37 +113,11 @@ def logout():
     return redirect(url_for('login'))
 
 
-# @app.route('/uploads/<filename>')
-# @login_required
-# def serve_image(filename):
-#     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
-
 @app.route('/uploads/<filename>')
 @login_required
 def serve_image(filename):
     mime_type = get_image_mime_type(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, mimetype=mime_type)
-
-# @app.route('/upload', methods=['POST'])
-# def upload_file():
-#     if 'file' not in request.files:
-#         flash('No file part', 'error')
-#         return redirect(url_for('index'))
-    
-#     file = request.files['file']
-    
-#     if file.filename == '':
-#         flash('No selected file', 'error')
-#         return redirect(url_for('index'))
-    
-#     if file and allowed_file(file.filename):
-#         filename = file.filename
-#         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-#         flash(f'Uploaded: {filename}', 'success')
-#         return redirect(url_for('index'))
-#     else:
-#         flash('Allowed file types: jpg, jpeg, png, gif', 'error')
-#         return redirect(url_for('index'))
     
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -211,7 +168,7 @@ def upload_file():
     if success_count > 0:
         flash(f'Successfully uploaded {success_count} file(s)', 'success')
     if failure_count > 0:
-        flash(f'Failed to upload {failure_count} file(s). Allowed file types: jpg, jpeg, png, gif, b64', 'error')
+        flash(f'Failed to upload {failure_count} file(s). Allowed file types: jpg, jpeg, png, gif, txt', 'error')
 
     return redirect(url_for('index'))
 
