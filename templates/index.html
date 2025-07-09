@@ -14,10 +14,51 @@
             alert('URL copied to clipboard!');
         }
     </script>
+    <style>
+        /* NEW: Modal styles */
+        /* .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: #bbb;
+        }
+        
+        .image-container {
+            cursor: pointer; /* NEW: Show pointer on hover 
+        } */
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Image Manager</h1>
+
+        <!-- Login Section -->
         <div class="user-info">
             Logged in as: {{ current_user.id }}
             <a href="{{ url_for('logout') }}">
@@ -40,7 +81,6 @@
         <div class="card">
             <h2>Upload New Image</h2>
             <form method="POST" action="/upload" enctype="multipart/form-data">
-                <!-- <input type="file" name="file" accept=".jpg,.jpeg,.png,.gif" required> -->
                 <!-- Replace the existing file input with this -->
                 <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.gif,.txt" required>
                 <button type="submit">Upload</button>
@@ -72,11 +112,6 @@
                                     <button>Download</button>
                                 </a>
                                 <!-- Delete Button -->
-                                <!-- <a href="{{ url_for('delete_file', filename=image) }}">
-                                    onclick="return confirm('Permanently delete {{ image }}?')">
-                                    <button class="delete">Delete</button>
-                                </a> -->
-                                <!-- Delete Button Section -->
                                 <a href="{{ url_for('delete_file', filename=image) }}">
                                     <button class="delete" onclick="return confirm('Permanently delete \'{{ image }}\'?')">Delete</button>
                                 </a>
@@ -89,6 +124,11 @@
             </div>
         </div>
     </div>
+    <div id="previewModal" class="modal">
+        <span class="modal-close">&times;</span>
+        <img id="modalImage" class="modal-content">
+    </div>
+
     <script>
         // Add confirmation to all delete buttons
         document.querySelectorAll('.delete').forEach(button => {
@@ -96,6 +136,43 @@
                 const filename = this.closest('.image-card').querySelector('a').innerText;
                 return confirm(`Permanently delete ${filename}?`);
             };
+        });
+
+        // NEW: Image preview functionality
+        const modal = document.getElementById('previewModal');
+        const modalImg = document.getElementById('modalImage');
+        const closeBtn = document.querySelector('.modal-close');
+        
+        // Open modal when image is clicked
+        document.querySelectorAll('.image-container').forEach(container => {
+            container.addEventListener('click', function() {
+                const imgSrc = this.querySelector('img').src;
+                modalImg.src = imgSrc;
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+        
+        // Close modal when X is clicked
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Close modal when clicking outside image
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.style.display === 'block') {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         });
     </script>
 </body>

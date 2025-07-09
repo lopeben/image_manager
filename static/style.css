@@ -170,6 +170,11 @@ button.logout {
     background-color: #f8f9fa;
 }
 
+/* Make image containers clickable */
+.image-container {
+    cursor: pointer;
+}
+
 .image-container img {
     width: 100%;
     height: 100%;
@@ -323,4 +328,65 @@ button.logout {
         padding: 20px;
         border-radius: 12px;
     }
+}
+
+/* NEW: Modal enhancements */
+.modal-content {
+    animation: zoom 0.3s;
+    object-fit: contain;
+    max-height: 85vh;
+}
+
+@keyframes zoom {
+    from {transform: scale(0.9); opacity: 0;}
+    to {transform: scale(1); opacity: 1;}
+}
+
+.modal-close {
+    transition: 0.3s;
+    z-index: 1001;
+}
+
+
+/* Modal background */
+.modal {
+    backdrop-filter: blur(5px);
+}
+
+/* NEW: Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.9);
+}
+
+.modal-content {
+    margin: auto;
+    display: block;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.modal-close:hover {
+    color: #bbb;
+}
+
+.image-container {
+    cursor: pointer; /* NEW: Show pointer on hover */ 
 }
