@@ -120,6 +120,7 @@
         const modalImg = document.getElementById('modalImage');
         const closeBtn = document.querySelector('.modal-close');
         
+        
         // Open modal when image is clicked
         // document.querySelectorAll('.image-container').forEach(container => {
         //     container.addEventListener('click', function() {
@@ -131,21 +132,41 @@
         // });
 
         // Update preview functionality
+        // document.querySelectorAll('.image-container').forEach(container => {
+        //     container.addEventListener('click', function() {
+        //         const img = this.querySelector('img');
+        //         if (img) {
+        //             modalImg.src = img.dataset.fullsize;  // Use full-size for preview
+        //             modal.style.display = 'block';
+        //             document.body.style.overflow = 'hidden';
+        //         }
+        //     });
+        // });
+
+        // Open modal with centered image
         document.querySelectorAll('.image-container').forEach(container => {
             container.addEventListener('click', function() {
                 const img = this.querySelector('img');
                 if (img) {
-                    modalImg.src = img.dataset.fullsize;  // Use full-size for preview
-                    modal.style.display = 'block';
+                    modalImg.src = img.dataset.fullsize;
+                    modalImg.classList.remove('zoom'); // Reset zoom state
+                    modal.style.display = 'flex'; // Use flex display
                     document.body.style.overflow = 'hidden';
                 }
             });
         });
+
         
         // Close modal when X is clicked
-        closeBtn.addEventListener('click', function() {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
+        // closeBtn.addEventListener('click', function() {
+        //     modal.style.display = 'none';
+        //     document.body.style.overflow = 'auto';
+        // });
+
+        // Close modal
+        closeBtn.addEventListener('click', closeModal);
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) closeModal();
         });
         
         // Close modal when clicking outside image
@@ -157,12 +178,54 @@
         });
         
         // Close modal with Escape key
+        // document.addEventListener('keydown', function(event) {
+        //     if (event.key === 'Escape' && modal.style.display === 'block') {
+        //         modal.style.display = 'none';
+        //         document.body.style.overflow = 'auto';
+        //     }
+        // });
+
+        // Close with ESC key
         document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && modal.style.display === 'block') {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
+            if (event.key === 'Escape' && modal.style.display === 'flex') closeModal();
+        });
+
+        // New: Toggle zoom on double click/tap
+        modalImg.addEventListener('dblclick', function() {
+            this.classList.toggle('zoom');
+        });
+
+        // New: Mobile pinch-to-zoom simulation
+        let lastDistance = 0;
+        modalImg.addEventListener('touchstart', function(e) {
+            if (e.touches.length === 2) lastDistance = getTouchDistance(e);
+        });
+
+        modalImg.addEventListener('touchmove', function(e) {
+            if (e.touches.length === 2) {
+                const newDistance = getTouchDistance(e);
+                if (newDistance > lastDistance + 10) {
+                    this.classList.add('zoom');
+                } else if (newDistance < lastDistance - 10) {
+                    this.classList.remove('zoom');
+                }
+                lastDistance = newDistance;
+                e.preventDefault();
             }
         });
+
+        function getTouchDistance(e) {
+            return Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
     </script>
 </body>
 </html>

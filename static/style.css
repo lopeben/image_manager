@@ -380,7 +380,7 @@ button.logout {
 } */
 
 /* NEW: Modal enhancements */
-.modal-content {
+/* .modal-content {
     animation: zoom 0.3s;
     object-fit: contain;
     max-height: 85vh;
@@ -395,16 +395,16 @@ button.logout {
 .modal-close {
     transition: 0.3s;
     z-index: 1001;
-}
+} */
 
 
 /* Modal background */
-.modal {
+/* .modal {
     backdrop-filter: blur(5px);
-}
+} */
 
 /* NEW: Modal styles */
-.modal {
+/* .modal {
     display: none;
     position: fixed;
     z-index: 1000;
@@ -414,16 +414,46 @@ button.logout {
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.9);
+} */
+
+/* Modal background */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(5px);
+    overflow: hidden;
+    touch-action: none; /* Prevent touch scrolling */
+    
+    /* Flex centering */
+    /* display: flex; */
+    justify-content: center;
+    align-items: center;
 }
 
-.modal-content {
+/* .modal-content {
     margin: auto;
     display: block;
     max-width: 90%;
     max-height: 90%;
+} */
+
+/* Modal content (image) */
+.modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    
+    /* Smooth scaling */
+    transition: transform 0.2s ease-out;
 }
 
-.modal-close {
+/* .modal-close {
     position: absolute;
     top: 15px;
     right: 35px;
@@ -431,9 +461,43 @@ button.logout {
     font-size: 40px;
     font-weight: bold;
     cursor: pointer;
+} */
+
+/* Close button */
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1001;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .modal-close:hover {
     color: #bbb;
+}
+
+
+/* Touch-friendly controls */
+@media (max-width: 768px) {
+    .modal-close {
+        top: 10px;
+        right: 15px;
+        font-size: 30px;
+    }
+    
+    .modal-content {
+        max-width: 95vw;
+        max-height: 95vh;
+    }
+}
+
+/* Pinch-to-zoom enhancement */
+.modal-content.zoom {
+    transform: scale(1.5);
+    cursor: zoom-out;
 }
 
