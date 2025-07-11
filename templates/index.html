@@ -61,6 +61,13 @@
                             {% else %}
                                 <div class="file-icon">{{ image.split('.')[-1]|upper }} File</div>
                             {% endif %}
+
+                            <!-- Moved Delete Button Here -->
+                            <a class="delete-icon" href="{{ url_for('delete_file', filename=image) }}" 
+                                onclick="return confirm('Permanently delete \'{{ image }}\'?')">
+                                × <!-- This is the "X" symbol -->
+                            </a>
+
                         </div>
 
                         <!-- 2. Image Information & Actions -->
@@ -71,16 +78,16 @@
                             </a>
                             
                             <!-- 2b. Action Buttons -->
-                            <div class="actions">
+                            <!-- <div class="actions"> -->
                                 <!-- Download Button -->
-                                <a href="{{ url_for('serve_image', filename=image) }}" download>
-                                    <button>Download</button>
-                                </a>
+                                <!-- <a href="{{ url_for('serve_image', filename=image) }}" download> -->
+                                    <!-- <button>Download</button> -->
+                                <!-- </a> -->
                                 <!-- Delete Button -->
-                                <a href="{{ url_for('delete_file', filename=image) }}">
-                                    <button class="delete" onclick="return confirm('Permanently delete \'{{ image }}\'?')">Delete</button>
-                                </a>
-                            </div>
+                                <!-- <a href="{{ url_for('delete_file', filename=image) }}"> -->
+                                    <!-- <button class="delete" onclick="return confirm('Permanently delete \'{{ image }}\'?')">Delete</button> -->
+                                <!-- </a> -->
+                            <!-- </div> -->
                         </div>
                     </div>
                 {% else %}

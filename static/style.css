@@ -166,6 +166,7 @@ button.logout {
 
 /* Image container */
 .image-container {
+    position: relative; /* Required for absolute positioning of delete icon */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -176,6 +177,12 @@ button.logout {
     border-radius: 8px;
     cursor: pointer; /* NEW: Show pointer on hover */
 }
+
+/* .image-container {
+    /* position: relative; Required for absolute positioning */
+    /* display: inline-block; Ensure container wraps around content */
+/* }  */
+
 
 /* Thumbnail images */
 .image-container img {
@@ -205,6 +212,33 @@ button.logout {
 
 .image-info a:hover {
     text-decoration: underline;
+}
+
+.delete-icon {
+    /* Positioning */
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    
+    /* Styling */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    text-decoration: none;
+    z-index: 10;
+    transition: background 0.2s;
+}
+
+.delete-icon:hover {
+    background: rgba(255, 0, 0, 0.8); /* Red background on hover */
+    cursor: pointer;
 }
 
 /* Non-image file placeholder */
