@@ -77,11 +77,46 @@ def get_image_mime_type(filename):
         return 'text/plain'
     return 'application/octet-stream'
 
+# @app.route('/')
+# @login_required
+# def index():
+#     images = os.listdir(app.config['UPLOAD_FOLDER'])
+#     return render_template('index.html', images=images)
+
+# Add pagination parameters to index route
 @app.route('/')
 @login_required
 def index():
-    images = os.listdir(app.config['UPLOAD_FOLDER'])
-    return render_template('index.html', images=images)
+    page = request.args.get('page', 1, type=int)
+    per_page = 50  # Items per page
+
+    # Get sorted files (newest first)
+    files = []
+    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if allowed_file(filename) and os.path.isfile(path):
+            files.append({
+                'name': filename,
+                'mtime': os.path.getmtime(path)  # Sort by modified time
+            })
+    
+    # Sort by upload time (newest first)
+    files.sort(key=lambda x: x['mtime'], reverse=True)
+    
+    # Paginate
+    total_files = len(files)
+    total_pages = (total_files + per_page - 1) // per_page
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_files = files[start:end]
+
+    return render_template(
+        'index.html',
+        images=[f['name'] for f in paginated_files],
+        page=page,
+        total_pages=total_pages,
+        total_files=total_files
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
