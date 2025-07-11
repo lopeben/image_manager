@@ -253,6 +253,10 @@ button.logout {
     .image-container {
         height: 150px;
     }
+    
+    .image-container {
+        cursor: pointer; /* NEW: Show pointer on hover */ 
+    }
 }
 
 /* Base64 Actions */
@@ -387,6 +391,3 @@ button.logout {
     color: #bbb;
 }
 
-.image-container {
-    cursor: pointer; /* NEW: Show pointer on hover */ 
-}
