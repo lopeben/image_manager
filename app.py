@@ -1,6 +1,8 @@
 import os
 import secrets
 import string
+
+from PIL import Image
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,6 +10,7 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+# app.config['THUMBS_FOLDER'] = 'thumbs'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif', 'b64'}
 app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
 app.secret_key = 'your_secret_key_here'
@@ -59,11 +62,11 @@ def load_user(user_id):
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# os.makedirs(app.config['THUMBS_FOLDER'], exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
 
 def get_image_mime_type(filename):
     ext = filename.split('.')[-1].lower()
@@ -76,6 +79,23 @@ def get_image_mime_type(filename):
     elif ext == 'txt':
         return 'text/plain'
     return 'application/octet-stream'
+
+# Add after allowed_file() function
+THUMBNAIL_SIZE = (800, 800)  # Increased from default (400,400)
+
+def create_thumbnail(path):
+    try:
+        img = Image.open(path)
+        img.thumbnail(THUMBNAIL_SIZE, Image.LANCZOS)
+        thumb_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs')
+        os.makedirs(thumb_dir, exist_ok=True)
+        thumb_path = os.path.join(thumb_dir, os.path.basename(path))
+        img.save(thumb_path)
+        return thumb_path
+    except Exception as e:
+        app.logger.error(f"Thumbnail creation failed: {str(e)}")
+        return None
+
 
 # @app.route('/')
 # @login_required
@@ -152,6 +172,12 @@ def logout():
 def serve_image(filename):
     mime_type = get_image_mime_type(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, mimetype=mime_type)
+
+@app.route('/thumbs/<filename>')
+@login_required
+def serve_thumbnail(filename):
+    thumb_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs')
+    return send_from_directory(thumb_dir, filename)
     
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -192,6 +218,10 @@ def upload_file():
             try:
                 file.save(target_path)
                 success_count += 1
+                    # Generate thumbnail for images
+                if filename.lower().endswith(('jpg', 'jpeg', 'png', 'gif')):
+                    create_thumbnail(target_path)
+
             except Exception as e:
                 app.logger.error(f"Error saving file {filename}: {str(e)}")
                 failure_count += 1

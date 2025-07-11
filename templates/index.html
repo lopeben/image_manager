@@ -47,8 +47,20 @@
                     <div class="image-card">
 
                         <!-- 1. Image Display -->
+                        <!-- <div class="image-container"> -->
+                            <!-- <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}"> -->
+                            <!-- <img src="{{ url_for('serve_thumbnail', filename=image) }}" alt="{{ image }}" loading="lazy"> -->
+                        <!-- </div> -->
+
+                        <!-- Replace image display -->
                         <div class="image-container">
-                            <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}">
+                            {% if image.split('.')[-1]|lower in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                <img src="{{ url_for('serve_thumbnail', filename=image) }}" 
+                                    alt="{{ image }}"
+                                    data-fullsize="{{ url_for('serve_image', filename=image) }}">
+                            {% else %}
+                                <div class="file-icon">{{ image.split('.')[-1]|upper }} File</div>
+                            {% endif %}
                         </div>
 
                         <!-- 2. Image Information & Actions -->
@@ -109,12 +121,24 @@
         const closeBtn = document.querySelector('.modal-close');
         
         // Open modal when image is clicked
+        // document.querySelectorAll('.image-container').forEach(container => {
+        //     container.addEventListener('click', function() {
+        //         const imgSrc = this.querySelector('img').src;
+        //         modalImg.src = imgSrc;
+        //         modal.style.display = 'block';
+        //         document.body.style.overflow = 'hidden'; // Prevent scrolling
+        //     });
+        // });
+
+        // Update preview functionality
         document.querySelectorAll('.image-container').forEach(container => {
             container.addEventListener('click', function() {
-                const imgSrc = this.querySelector('img').src;
-                modalImg.src = imgSrc;
-                modal.style.display = 'block';
-                document.body.style.overflow = 'hidden'; // Prevent scrolling
+                const img = this.querySelector('img');
+                if (img) {
+                    modalImg.src = img.dataset.fullsize;  // Use full-size for preview
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
             });
         });
         

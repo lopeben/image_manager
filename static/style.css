@@ -164,23 +164,51 @@ button.logout {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-.image-container {
+/* .image-container {
     height: 200px;
     overflow: hidden;
     background-color: #f8f9fa;
-}
+} */
 
 /* Make image containers clickable */
-.image-container {
+/* .image-container {
     cursor: pointer;
+} */
+
+/* Image container */
+.image-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 400px; /* Fixed height for consistent layout */
+    margin-bottom: 15px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    cursor: pointer; /* NEW: Show pointer on hover */
 }
 
-.image-container img {
+/* .image-container img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
+} */
+
+/* Thumbnail images */
+.image-container img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
 }
+
+/* Hover effect for images */
+.image-container img:hover {
+    transform: scale(1.03);
+    cursor: zoom-in;
+}
+
 
 .image-info {
     padding: 15px;
@@ -196,6 +224,16 @@ button.logout {
 
 .image-info a:hover {
     text-decoration: underline;
+}
+
+/* Non-image file placeholder */
+.file-icon {
+    padding: 20px;
+    background: #e9ecef;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: center;
 }
 
 .actions {
@@ -253,7 +291,7 @@ button.logout {
     .image-container {
         height: 150px;
     }
-    
+
     .image-container {
         cursor: pointer; /* NEW: Show pointer on hover */ 
     }
@@ -334,16 +372,24 @@ button.logout {
     }
 }
 
+/* Modal image size */
+/* .modal-content {
+    max-height: 85vh;
+    max-width: 85vw;
+    object-fit: contain;
+} */
+
 /* NEW: Modal enhancements */
 .modal-content {
     animation: zoom 0.3s;
     object-fit: contain;
     max-height: 85vh;
+    max-width: 85vw;
 }
 
 @keyframes zoom {
     from {transform: scale(0.9); opacity: 0;}
-    to {transform: scale(1); opacity: 1;}
+    to {transform: scale(10); opacity: 1;}
 }
 
 .modal-close {
