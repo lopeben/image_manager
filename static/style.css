@@ -164,17 +164,6 @@ button.logout {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
-/* .image-container {
-    height: 200px;
-    overflow: hidden;
-    background-color: #f8f9fa;
-} */
-
-/* Make image containers clickable */
-/* .image-container {
-    cursor: pointer;
-} */
-
 /* Image container */
 .image-container {
     display: flex;
@@ -187,13 +176,6 @@ button.logout {
     border-radius: 8px;
     cursor: pointer; /* NEW: Show pointer on hover */
 }
-
-/* .image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-} */
 
 /* Thumbnail images */
 .image-container img {
@@ -208,7 +190,6 @@ button.logout {
     transform: scale(1.03);
     cursor: zoom-in;
 }
-
 
 .image-info {
     padding: 15px;
@@ -372,50 +353,6 @@ button.logout {
     }
 }
 
-/* Modal image size */
-/* .modal-content {
-    max-height: 85vh;
-    max-width: 85vw;
-    object-fit: contain;
-} */
-
-/* NEW: Modal enhancements */
-/* .modal-content {
-    animation: zoom 0.3s;
-    object-fit: contain;
-    max-height: 85vh;
-    max-width: 85vw;
-}
-
-@keyframes zoom {
-    from {transform: scale(0.9); opacity: 0;}
-    to {transform: scale(10); opacity: 1;}
-}
-
-.modal-close {
-    transition: 0.3s;
-    z-index: 1001;
-} */
-
-
-/* Modal background */
-/* .modal {
-    backdrop-filter: blur(5px);
-} */
-
-/* NEW: Modal styles */
-/* .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    padding-top: 60px;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.9);
-} */
-
 /* Modal background */
 .modal {
     display: none;
@@ -431,17 +368,9 @@ button.logout {
     touch-action: none; /* Prevent touch scrolling */
     
     /* Flex centering */
-    /* display: flex; */
     justify-content: center;
     align-items: center;
 }
-
-/* .modal-content {
-    margin: auto;
-    display: block;
-    max-width: 90%;
-    max-height: 90%;
-} */
 
 /* Modal content (image) */
 .modal-content {
@@ -452,16 +381,6 @@ button.logout {
     /* Smooth scaling */
     transition: transform 0.2s ease-out;
 }
-
-/* .modal-close {
-    position: absolute;
-    top: 15px;
-    right: 35px;
-    color: #f1f1f1;
-    font-size: 40px;
-    font-weight: bold;
-    cursor: pointer;
-} */
 
 /* Close button */
 .modal-close {
@@ -500,4 +419,3 @@ button.logout {
     transform: scale(1.5);
     cursor: zoom-out;
 }
-

@@ -34,7 +34,7 @@
             <h2>Upload New Image</h2>
             <form method="POST" action="/upload" enctype="multipart/form-data">
                 <!-- Replace the existing file input with this -->
-                <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.gif,.txt" required>
+                <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.gif,.ico,.txt" required>
                 <button type="submit">Upload</button>
             </form>
         </div>
@@ -119,29 +119,6 @@
         const modal = document.getElementById('previewModal');
         const modalImg = document.getElementById('modalImage');
         const closeBtn = document.querySelector('.modal-close');
-        
-        
-        // Open modal when image is clicked
-        // document.querySelectorAll('.image-container').forEach(container => {
-        //     container.addEventListener('click', function() {
-        //         const imgSrc = this.querySelector('img').src;
-        //         modalImg.src = imgSrc;
-        //         modal.style.display = 'block';
-        //         document.body.style.overflow = 'hidden'; // Prevent scrolling
-        //     });
-        // });
-
-        // Update preview functionality
-        // document.querySelectorAll('.image-container').forEach(container => {
-        //     container.addEventListener('click', function() {
-        //         const img = this.querySelector('img');
-        //         if (img) {
-        //             modalImg.src = img.dataset.fullsize;  // Use full-size for preview
-        //             modal.style.display = 'block';
-        //             document.body.style.overflow = 'hidden';
-        //         }
-        //     });
-        // });
 
         // Open modal with centered image
         document.querySelectorAll('.image-container').forEach(container => {
@@ -156,13 +133,6 @@
             });
         });
 
-        
-        // Close modal when X is clicked
-        // closeBtn.addEventListener('click', function() {
-        //     modal.style.display = 'none';
-        //     document.body.style.overflow = 'auto';
-        // });
-
         // Close modal
         closeBtn.addEventListener('click', closeModal);
         window.addEventListener('click', function(event) {
@@ -176,14 +146,6 @@
                 document.body.style.overflow = 'auto';
             }
         });
-        
-        // Close modal with Escape key
-        // document.addEventListener('keydown', function(event) {
-        //     if (event.key === 'Escape' && modal.style.display === 'block') {
-        //         modal.style.display = 'none';
-        //         document.body.style.overflow = 'auto';
-        //     }
-        // });
 
         // Close with ESC key
         document.addEventListener('keydown', function(event) {

@@ -10,12 +10,10 @@ from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-# app.config['THUMBS_FOLDER'] = 'thumbs'
-app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif', 'b64'}
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif', 'ico', 'b64'}
 app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
 app.secret_key = 'your_secret_key_here'
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
-
 
 # Flask-Login setup
 login_manager = LoginManager()
@@ -62,7 +60,6 @@ def load_user(user_id):
 
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-# os.makedirs(app.config['THUMBS_FOLDER'], exist_ok=True)
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -80,8 +77,8 @@ def get_image_mime_type(filename):
         return 'text/plain'
     return 'application/octet-stream'
 
-# Add after allowed_file() function
-THUMBNAIL_SIZE = (800, 800)  # Increased from default (400,400)
+# Increased from default (400,400)
+THUMBNAIL_SIZE = (800, 800)  
 
 def create_thumbnail(path):
     try:
@@ -96,12 +93,6 @@ def create_thumbnail(path):
         app.logger.error(f"Thumbnail creation failed: {str(e)}")
         return None
 
-
-# @app.route('/')
-# @login_required
-# def index():
-#     images = os.listdir(app.config['UPLOAD_FOLDER'])
-#     return render_template('index.html', images=images)
 
 # Add pagination parameters to index route
 @app.route('/')
