@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
@@ -65,9 +67,9 @@
                             <!-- Moved Delete Button Here -->
                             <a class="delete-icon" href="{{ url_for('delete_file', filename=image) }}" 
                                 onclick="return confirm('Permanently delete \'{{ image }}\'?')">
-                                × <!-- This is the "X" symbol -->
+                                <!-- <i class="fa-solid fa-trash"></i> -->
+                                <i class="fa fa-trash" aria-hidden="true"></i>
                             </a>
-
                         </div>
 
                         <!-- 2. Image Information & Actions -->
