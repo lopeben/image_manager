@@ -49,12 +49,6 @@
                     <div class="image-card">
 
                         <!-- 1. Image Display -->
-                        <!-- <div class="image-container"> -->
-                            <!-- <img src="{{ url_for('serve_image', filename=image) }}" alt="{{ image }}"> -->
-                            <!-- <img src="{{ url_for('serve_thumbnail', filename=image) }}" alt="{{ image }}" loading="lazy"> -->
-                        <!-- </div> -->
-
-                        <!-- Replace image display -->
                         <div class="image-container">
                             {% if image.split('.')[-1]|lower in ['jpg', 'jpeg', 'png', 'gif'] %}
                                 <img src="{{ url_for('serve_thumbnail', filename=image) }}" 
@@ -67,7 +61,6 @@
                             <!-- Moved Delete Button Here -->
                             <a class="delete-icon" href="{{ url_for('delete_file', filename=image) }}" 
                                 onclick="return confirm('Permanently delete \'{{ image }}\'?')">
-                                <!-- <i class="fa-solid fa-trash"></i> -->
                                 <i class="fa fa-trash" aria-hidden="true"></i>
                             </a>
                         </div>
@@ -78,18 +71,6 @@
                             <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
                                 {{ image }}
                             </a>
-                            
-                            <!-- 2b. Action Buttons -->
-                            <!-- <div class="actions"> -->
-                                <!-- Download Button -->
-                                <!-- <a href="{{ url_for('serve_image', filename=image) }}" download> -->
-                                    <!-- <button>Download</button> -->
-                                <!-- </a> -->
-                                <!-- Delete Button -->
-                                <!-- <a href="{{ url_for('delete_file', filename=image) }}"> -->
-                                    <!-- <button class="delete" onclick="return confirm('Permanently delete \'{{ image }}\'?')">Delete</button> -->
-                                <!-- </a> -->
-                            <!-- </div> -->
                         </div>
                     </div>
                 {% else %}

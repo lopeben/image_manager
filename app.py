@@ -209,7 +209,7 @@ def upload_file():
             try:
                 file.save(target_path)
                 success_count += 1
-                    # Generate thumbnail for images
+                # Generate thumbnail for images
                 if filename.lower().endswith(('jpg', 'jpeg', 'png', 'gif')):
                     create_thumbnail(target_path)
 
