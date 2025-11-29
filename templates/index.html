@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Manager</title>
+    <title>File Manager</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Image Manager</h1>
+        <h1>File Manager</h1>
 
         <!-- Login Section -->
         <div class="user-info">
@@ -33,48 +33,66 @@
         
         <!-- Upload Section -->
         <div class="card">
-            <h2>Upload New Image</h2>
+            <h2>Upload Files</h2>
             <form method="POST" action="/upload" enctype="multipart/form-data">
-                <!-- Replace the existing file input with this -->
-                <input type="file" name="files" multiple accept=".jpg,.jpeg,.png,.gif,.ico,.txt" required>
+                <input type="file" name="files" multiple required>
                 <button type="submit">Upload</button>
             </form>
         </div>
         
-        <!-- Image Gallery -->
+        <!-- File Gallery -->
         <div class="card">
-            <h2>Stored Images</h2>
+            <h2>Stored Files</h2>
             <div class="gallery">
-                {% for image in images %}
+                {% for file in files %}
                     <div class="image-card">
 
-                        <!-- 1. Image Display -->
-                        <div class="image-container">
-                            {% if image.split('.')[-1]|lower in ['jpg', 'jpeg', 'png', 'gif'] %}
-                                <img src="{{ url_for('serve_thumbnail', filename=image) }}" 
-                                    alt="{{ image }}"
-                                    data-fullsize="{{ url_for('serve_image', filename=image) }}">
+                        <!-- 1. File Display -->
+                        <div class="image-container {% if file.type != 'image' %}non-image{% endif %}">
+                            {% if file.type == 'image' %}
+                                <img src="{{ url_for('serve_thumbnail', filename=file.name) }}" 
+                                    alt="{{ file.name }}"
+                                    data-fullsize="{{ url_for('serve_file', filename=file.name) }}">
                             {% else %}
-                                <div class="file-icon">{{ image.split('.')[-1]|upper }} File</div>
+                                <div class="file-icon-wrapper">
+                                    {% if file.type == 'document' %}
+                                        <i class="fas fa-file-alt file-icon-large"></i>
+                                    {% elif file.type == 'spreadsheet' %}
+                                        <i class="fas fa-file-excel file-icon-large"></i>
+                                    {% elif file.type == 'presentation' %}
+                                        <i class="fas fa-file-powerpoint file-icon-large"></i>
+                                    {% elif file.type == 'archive' %}
+                                        <i class="fas fa-file-archive file-icon-large"></i>
+                                    {% elif file.type == 'audio' %}
+                                        <i class="fas fa-file-audio file-icon-large"></i>
+                                    {% elif file.type == 'video' %}
+                                        <i class="fas fa-file-video file-icon-large"></i>
+                                    {% elif file.type == 'code' %}
+                                        <i class="fas fa-file-code file-icon-large"></i>
+                                    {% else %}
+                                        <i class="fas fa-file file-icon-large"></i>
+                                    {% endif %}
+                                    <div class="file-extension">{{ file.name.split('.')[-1]|upper }}</div>
+                                </div>
                             {% endif %}
 
-                            <!-- Moved Delete Button Here -->
-                            <a class="delete-icon" href="{{ url_for('delete_file', filename=image) }}" 
-                                onclick="return confirm('Permanently delete \'{{ image }}\'?')">
+                            <!-- Delete Button -->
+                            <a class="delete-icon" href="{{ url_for('delete_file', filename=file.name) }}" 
+                                onclick="return confirm('Permanently delete \'{{ file.name }}\'?')">
                                 <i class="fa fa-trash" aria-hidden="true"></i>
                             </a>
                         </div>
 
-                        <!-- 2. Image Information & Actions -->
+                        <!-- 2. File Information & Actions -->
                         <div class="image-info">
                             <!-- 2a. Filename Link -->
-                            <a href="{{ url_for('serve_image', filename=image) }}" target="_blank">
-                                {{ image }}
+                            <a href="{{ url_for('serve_file', filename=file.name) }}" target="_blank">
+                                {{ file.name }}
                             </a>
                         </div>
                     </div>
                 {% else %}
-                    <p>No images uploaded yet</p>
+                    <p>No files uploaded yet</p>
                 {% endfor %}
             </div>
         </div>
@@ -110,8 +128,8 @@
         const modalImg = document.getElementById('modalImage');
         const closeBtn = document.querySelector('.modal-close');
 
-        // Open modal with centered image
-        document.querySelectorAll('.image-container').forEach(container => {
+        // Open modal with centered image (only for images, not file icons)
+        document.querySelectorAll('.image-container:not(.non-image)').forEach(container => {
             container.addEventListener('click', function() {
                 const img = this.querySelector('img');
                 if (img) {

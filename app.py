@@ -6,11 +6,28 @@ from PIL import Image
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import hashlib
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif', 'ico', 'b64'}
+# Support all common file types
+app.config['ALLOWED_EXTENSIONS'] = {
+    # Images
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif',
+    # Documents
+    'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'rtf', 'odt', 'ods', 'odp',
+    # Archives
+    'zip', 'rar', '7z', 'tar', 'gz', 'bz2',
+    # Audio
+    'mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg', 'wma',
+    # Video
+    'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm', 'm4v',
+    # Code
+    'py', 'js', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'md', 'sh', 'bat',
+    # Other
+    'csv', 'sql', 'log', 'ini', 'cfg', 'conf'
+}
 app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
 app.secret_key = 'your_secret_key_here'
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
@@ -40,7 +57,7 @@ def load_users():
             # Create default user if file doesn't exist
             default_user = 'admin'
             default_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
-            default_hash = generate_password_hash(default_password)
+            default_hash = generate_password_hash(default_password, method='pbkdf2:sha256')
             
             with open(app.config['USER_CREDENTIALS_FILE'], 'w') as f:
                 f.write(f"{default_user}:{default_hash}\n")
@@ -65,17 +82,92 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-def get_image_mime_type(filename):
+def get_file_mime_type(filename):
     ext = filename.split('.')[-1].lower()
-    if ext == 'png':
-        return 'image/png'
-    elif ext in ['jpg', 'jpeg']:
-        return 'image/jpeg'
-    elif ext == 'gif':
-        return 'image/gif'
-    elif ext == 'txt':
-        return 'text/plain'
-    return 'application/octet-stream'
+    mime_types = {
+        # Images
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'bmp': 'image/bmp',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml',
+        'ico': 'image/x-icon',
+        'tiff': 'image/tiff',
+        'tif': 'image/tiff',
+        # Documents
+        'pdf': 'application/pdf',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'ppt': 'application/vnd.ms-powerpoint',
+        'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'txt': 'text/plain',
+        'rtf': 'application/rtf',
+        # Archives
+        'zip': 'application/zip',
+        'rar': 'application/x-rar-compressed',
+        '7z': 'application/x-7z-compressed',
+        'tar': 'application/x-tar',
+        'gz': 'application/gzip',
+        # Audio
+        'mp3': 'audio/mpeg',
+        'wav': 'audio/wav',
+        'flac': 'audio/flac',
+        'aac': 'audio/aac',
+        'm4a': 'audio/mp4',
+        'ogg': 'audio/ogg',
+        # Video
+        'mp4': 'video/mp4',
+        'avi': 'video/x-msvideo',
+        'mkv': 'video/x-matroska',
+        'mov': 'video/quicktime',
+        'wmv': 'video/x-ms-wmv',
+        'webm': 'video/webm',
+        # Code/Text
+        'html': 'text/html',
+        'css': 'text/css',
+        'js': 'application/javascript',
+        'json': 'application/json',
+        'xml': 'application/xml',
+        'csv': 'text/csv',
+        'md': 'text/markdown',
+    }
+    return mime_types.get(ext, 'application/octet-stream')
+
+def get_file_type_category(filename):
+    """Categorize file type for icon display"""
+    ext = filename.split('.')[-1].lower()
+    
+    image_exts = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tiff', 'tif'}
+    document_exts = {'pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'}
+    spreadsheet_exts = {'xls', 'xlsx', 'csv', 'ods'}
+    presentation_exts = {'ppt', 'pptx', 'odp'}
+    archive_exts = {'zip', 'rar', '7z', 'tar', 'gz', 'bz2'}
+    audio_exts = {'mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg', 'wma'}
+    video_exts = {'mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv', 'webm', 'm4v'}
+    code_exts = {'py', 'js', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'md', 'sh', 'bat', 'sql'}
+    
+    if ext in image_exts:
+        return 'image'
+    elif ext in document_exts:
+        return 'document'
+    elif ext in spreadsheet_exts:
+        return 'spreadsheet'
+    elif ext in presentation_exts:
+        return 'presentation'
+    elif ext in archive_exts:
+        return 'archive'
+    elif ext in audio_exts:
+        return 'audio'
+    elif ext in video_exts:
+        return 'video'
+    elif ext in code_exts:
+        return 'code'
+    else:
+        return 'file'
 
 # Increased from default (400,400)
 THUMBNAIL_SIZE = (800, 800)  
@@ -108,7 +200,8 @@ def index():
         if allowed_file(filename) and os.path.isfile(path):
             files.append({
                 'name': filename,
-                'mtime': os.path.getmtime(path)  # Sort by modified time
+                'mtime': os.path.getmtime(path),
+                'type': get_file_type_category(filename)
             })
     
     # Sort by upload time (newest first)
@@ -123,7 +216,7 @@ def index():
 
     return render_template(
         'index.html',
-        images=[f['name'] for f in paginated_files],
+        files=paginated_files,
         page=page,
         total_pages=total_pages,
         total_files=total_files
@@ -160,8 +253,8 @@ def logout():
 
 @app.route('/uploads/<filename>')
 @login_required
-def serve_image(filename):
-    mime_type = get_image_mime_type(filename)
+def serve_file(filename):
+    mime_type = get_file_mime_type(filename)
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename, mimetype=mime_type)
 
 @app.route('/thumbs/<filename>')
@@ -223,7 +316,7 @@ def upload_file():
     if success_count > 0:
         flash(f'Successfully uploaded {success_count} file(s)', 'success')
     if failure_count > 0:
-        flash(f'Failed to upload {failure_count} file(s). Allowed file types: jpg, jpeg, png, gif, txt', 'error')
+        flash(f'Failed to upload {failure_count} file(s)', 'error')
 
     return redirect(url_for('index'))
 
