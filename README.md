@@ -1,4 +1,4 @@
-# image_manager
+# filebox
 
 ### User Authentication Credentials Management Guide
 

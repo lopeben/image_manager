@@ -386,4 +386,4 @@ def delete_file(filename):
 
 if __name__ == '__main__':
     load_users()  # Load users at startup
-    app.run(host='0.0.0.0', port=80, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=False)
