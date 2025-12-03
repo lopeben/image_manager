@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, send_from_
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import hashlib
+import json
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -263,28 +264,47 @@ def serve_thumbnail(filename):
     thumb_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs')
     return send_from_directory(thumb_dir, filename)
     
+def calculate_file_hash(file_path):
+    """Calculate SHA256 hash of a file"""
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    # Check if this is an AJAX request for hash verification
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
     if 'files' not in request.files:
+        if is_ajax:
+            return json.dumps({'success': False, 'error': 'No file part'}), 400
         flash('No file part', 'error')
         return redirect(url_for('index'))
     
     files = request.files.getlist('files')
+    results = []
     success_count = 0
     failure_count = 0
 
     for file in files:
         if file.filename == '':
             failure_count += 1
+            if is_ajax:
+                results.append({'filename': '', 'success': False, 'error': 'Empty filename'})
             continue
         
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             if not filename:
                 failure_count += 1
+                if is_ajax:
+                    results.append({'filename': file.filename, 'success': False, 'error': 'Invalid filename'})
                 continue
             
             target_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            original_filename = filename
             
             # Handle filename conflicts
             if os.path.exists(target_path):
@@ -301,18 +321,52 @@ def upload_file():
             
             try:
                 file.save(target_path)
+                
+                # Calculate hash for verification
+                file_hash = calculate_file_hash(target_path)
+                
                 success_count += 1
+                
                 # Generate thumbnail for images
                 if filename.lower().endswith(('jpg', 'jpeg', 'png', 'gif')):
                     create_thumbnail(target_path)
+                
+                if is_ajax:
+                    results.append({
+                        'filename': original_filename,
+                        'saved_as': filename,
+                        'success': True,
+                        'hash': file_hash
+                    })
 
             except Exception as e:
                 app.logger.error(f"Error saving file {filename}: {str(e)}")
                 failure_count += 1
+                if is_ajax:
+                    results.append({
+                        'filename': original_filename,
+                        'success': False,
+                        'error': str(e)
+                    })
         else:
             failure_count += 1
+            if is_ajax:
+                results.append({
+                    'filename': file.filename,
+                    'success': False,
+                    'error': 'File type not allowed'
+                })
 
-    # Summary messages
+    # Return JSON for AJAX requests
+    if is_ajax:
+        return json.dumps({
+            'success': failure_count == 0,
+            'files': results,
+            'success_count': success_count,
+            'failure_count': failure_count
+        }), 200, {'Content-Type': 'application/json'}
+    
+    # Traditional form submission
     if success_count > 0:
         flash(f'Successfully uploaded {success_count} file(s)', 'success')
     if failure_count > 0:

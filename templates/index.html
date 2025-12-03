@@ -34,9 +34,25 @@
         <!-- Upload Section -->
         <div class="card">
             <h2>Upload Files</h2>
-            <form method="POST" action="/upload" enctype="multipart/form-data">
-                <input type="file" name="files" multiple required>
-                <button type="submit">Upload</button>
+            <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
+                <input type="file" id="fileInput" name="files" multiple required>
+                
+                <div class="checkbox-container">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="deleteAfterUpload" name="deleteAfterUpload">
+                        <span>Delete files from device after successful upload</span>
+                    </label>
+                    <p class="checkbox-hint">Files will only be deleted after verifying upload integrity</p>
+                </div>
+                
+                <button type="submit" id="uploadButton">Upload</button>
+                
+                <div id="uploadProgress" class="upload-progress" style="display: none;">
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="progressText">Uploading...</p>
+                </div>
             </form>
         </div>
         
@@ -115,6 +131,152 @@
     </div>
 
     <script>
+        // File hash calculation using Web Crypto API
+        async function calculateFileHash(file) {
+            const buffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        // Handle form submission with hash verification
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            const deleteAfterUpload = document.getElementById('deleteAfterUpload').checked;
+            
+            // If delete option is not checked, use normal form submission
+            if (!deleteAfterUpload) {
+                return true;
+            }
+            
+            // Prevent default form submission for AJAX upload
+            e.preventDefault();
+            
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+            
+            if (files.length === 0) {
+                alert('Please select files to upload');
+                return false;
+            }
+            
+            const uploadButton = document.getElementById('uploadButton');
+            const uploadProgress = document.getElementById('uploadProgress');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+            
+            // Disable upload button and show progress
+            uploadButton.disabled = true;
+            uploadProgress.style.display = 'block';
+            
+            try {
+                // Calculate hashes for all files
+                progressText.textContent = 'Calculating file hashes...';
+                const fileHashes = new Map();
+                
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    progressText.textContent = `Calculating hash for ${file.name} (${i + 1}/${files.length})...`;
+                    const hash = await calculateFileHash(file);
+                    fileHashes.set(file.name, hash);
+                }
+                
+                // Upload files with retry logic
+                let allSuccess = true;
+                const maxRetries = 3;
+                const failedFiles = [];
+                
+                for (let attempt = 1; attempt <= maxRetries; attempt++) {
+                    progressText.textContent = `Upload attempt ${attempt}/${maxRetries}...`;
+                    progressFill.style.width = '50%';
+                    
+                    const formData = new FormData();
+                    for (let i = 0; i < files.length; i++) {
+                        formData.append('files', files[i]);
+                    }
+                    
+                    const response = await fetch('/upload', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Upload failed: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    progressFill.style.width = '75%';
+                    
+                    // Verify hashes
+                    progressText.textContent = 'Verifying file integrity...';
+                    allSuccess = true;
+                    failedFiles.length = 0;
+                    
+                    for (const fileResult of result.files) {
+                        if (!fileResult.success) {
+                            allSuccess = false;
+                            failedFiles.push(fileResult.filename);
+                            continue;
+                        }
+                        
+                        const clientHash = fileHashes.get(fileResult.filename);
+                        const serverHash = fileResult.hash;
+                        
+                        if (clientHash !== serverHash) {
+                            allSuccess = false;
+                            failedFiles.push(fileResult.filename);
+                            console.error(`Hash mismatch for ${fileResult.filename}`);
+                            console.error(`Client: ${clientHash}`);
+                            console.error(`Server: ${serverHash}`);
+                        }
+                    }
+                    
+                    if (allSuccess) {
+                        progressFill.style.width = '100%';
+                        progressText.textContent = 'Upload verified! Files can be safely deleted from your device.';
+                        
+                        // Show success message
+                        setTimeout(() => {
+                            alert(`✅ Successfully uploaded and verified ${files.length} file(s).\n\nYou can now safely delete these files from your device.`);
+                            window.location.reload();
+                        }, 1000);
+                        
+                        return;
+                    }
+                    
+                    // If not the last attempt, retry
+                    if (attempt < maxRetries) {
+                        progressText.textContent = `Hash verification failed for ${failedFiles.length} file(s). Retrying...`;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                    }
+                }
+                
+                // All retries failed
+                progressFill.style.width = '100%';
+                progressFill.style.backgroundColor = '#e74c3c';
+                progressText.textContent = '❌ Upload verification failed after 3 attempts';
+                
+                alert(`❌ Upload failed after ${maxRetries} attempts.\n\nFailed files:\n${failedFiles.join('\n')}\n\nDO NOT delete these files from your device!`);
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                progressFill.style.width = '100%';
+                progressFill.style.backgroundColor = '#e74c3c';
+                progressText.textContent = '❌ Upload error';
+                alert(`❌ Upload error: ${error.message}\n\nDO NOT delete files from your device!`);
+            } finally {
+                uploadButton.disabled = false;
+                setTimeout(() => {
+                    uploadProgress.style.display = 'none';
+                    progressFill.style.width = '0%';
+                    progressFill.style.backgroundColor = '#3498db';
+                }, 3000);
+            }
+        });
+
         // Add confirmation to all delete buttons
         document.querySelectorAll('.delete').forEach(button => {
             button.onclick = function(e) {
