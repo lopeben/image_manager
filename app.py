@@ -226,6 +226,35 @@ def create_thumbnail(path):
         return None
 
 
+import re
+from datetime import datetime
+from collections import defaultdict
+
+def extract_date_from_filename(filename):
+    """Extract date from filename patterns like 20241225_123456.jpg or 2024-12-25_12:34:56.jpg"""
+    # Common date patterns in filenames
+    patterns = [
+        r'(\d{8})_\d+',  # 20241225_123456
+        r'(\d{4}-\d{2}-\d{2})',  # 2024-12-25
+        r'(\d{4}\d{2}\d{2})',  # 20241225
+        r'IMG_(\d{8})_',  # IMG_20241225_
+        r'Screenshot_(\d{4}-\d{2}-\d{2})',  # Screenshot_2024-12-25
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, filename)
+        if match:
+            date_str = match.group(1)
+            try:
+                if '-' in date_str:
+                    return datetime.strptime(date_str, '%Y-%m-%d').date()
+                else:
+                    return datetime.strptime(date_str, '%Y%m%d').date()
+            except ValueError:
+                continue
+    
+    return None
+
 # Add pagination parameters to index route
 @app.route('/')
 @login_required
@@ -233,31 +262,57 @@ def index():
     page = request.args.get('page', 1, type=int)
     per_page = 50  # Items per page
 
-    # Get sorted files (newest first)
+    # Get all files with date information
     upload_folder = get_current_upload_folder()
     files = []
     for filename in os.listdir(upload_folder):
         path = os.path.join(upload_folder, filename)
         if allowed_file(filename) and os.path.isfile(path):
+            # Try to extract date from filename first
+            file_date = extract_date_from_filename(filename)
+            if not file_date:
+                # Fallback to file modification date
+                file_date = datetime.fromtimestamp(os.path.getmtime(path)).date()
+            
             files.append({
                 'name': filename,
                 'mtime': os.path.getmtime(path),
-                'type': get_file_type_category(filename)
+                'type': get_file_type_category(filename),
+                'date': file_date
             })
     
-    # Sort by upload time (newest first)
-    files.sort(key=lambda x: x['mtime'], reverse=True)
+    # Group files by date
+    grouped_files = defaultdict(list)
+    for file in files:
+        grouped_files[file['date']].append(file)
     
-    # Paginate
-    total_files = len(files)
-    total_pages = (total_files + per_page - 1) // per_page
-    start = (page - 1) * per_page
-    end = start + per_page
-    paginated_files = files[start:end]
+    # Sort dates (newest first) and files within each date
+    sorted_dates = sorted(grouped_files.keys(), reverse=True)
+    for date in sorted_dates:
+        grouped_files[date].sort(key=lambda x: x['mtime'], reverse=True)
+    
+    # Convert to list of date groups for template
+    date_groups = []
+    for date in sorted_dates:
+        date_groups.append({
+            'date': date,
+            'files': grouped_files[date],
+            'count': len(grouped_files[date])
+        })
+    
+    # Simple pagination by date groups
+    total_groups = len(date_groups)
+    groups_per_page = 10
+    total_pages = (total_groups + groups_per_page - 1) // groups_per_page
+    start = (page - 1) * groups_per_page
+    end = start + groups_per_page
+    paginated_groups = date_groups[start:end]
+    
+    total_files = sum(len(group['files']) for group in date_groups)
 
     return render_template(
         'index.html',
-        files=paginated_files,
+        date_groups=paginated_groups,
         page=page,
         total_pages=total_pages,
         total_files=total_files

@@ -229,8 +229,8 @@ button.logout {
 /* Gallery */
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
     margin-top: 20px;
 }
 
@@ -586,4 +586,58 @@ button.logout {
 .modal-content.zoom {
     transform: scale(1.5);
     cursor: zoom-out;
+}
+
+/* Date Grouping Styles */
+.date-group {
+    margin-bottom: 40px;
+}
+
+.date-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.date-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.file-count {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Enhanced gallery for date groups */
+.date-group .gallery {
+    margin-top: 0;
+    padding-left: 10px;
+}
+
+/* Mobile responsiveness for date headers */
+@media (max-width: 768px) {
+    .date-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
+    
+    .date-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .date-group .gallery {
+        padding-left: 0;
+    }
 }
