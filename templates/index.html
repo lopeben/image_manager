@@ -38,6 +38,14 @@
             <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
                 <input type="file" id="fileInput" name="files" multiple required>
                 
+                <!-- File System Access API Button (if supported) -->
+                <div id="fsaContainer" style="display: none; margin: 10px 0;">
+                    <button type="button" id="fsaButton" class="secondary-button">
+                        📁 Select Files (with auto-delete capability)
+                    </button>
+                    <p class="checkbox-hint">Uses advanced file picker that can automatically delete files after upload</p>
+                </div>
+                
                 <div class="checkbox-container">
                     <label class="checkbox-label">
                         <input type="checkbox" id="deleteAfterUpload" name="deleteAfterUpload">
@@ -132,6 +140,9 @@
     </div>
 
     <script>
+        // Check if File System Access API is supported
+        const supportsFileSystemAccess = 'showOpenFilePicker' in window;
+        
         // File hash calculation using CryptoJS (works on all devices)
         async function calculateFileHash(file) {
             return new Promise((resolve, reject) => {
@@ -152,13 +163,88 @@
                 reader.readAsArrayBuffer(file);
             });
         }
+        
+        // Auto-delete files using File System Access API
+        async function deleteFilesFromDevice(fileHandles) {
+            if (!supportsFileSystemAccess || !fileHandles || fileHandles.length === 0) {
+                return { success: false, reason: 'File System Access API not supported' };
+            }
+            
+            let deletedCount = 0;
+            const failedFiles = [];
+            
+            for (const handle of fileHandles) {
+                try {
+                    await handle.remove();
+                    deletedCount++;
+                } catch (error) {
+                    console.error(`Failed to delete ${handle.name}:`, error);
+                    failedFiles.push(handle.name);
+                }
+            }
+            
+            return {
+                success: deletedCount > 0,
+                deletedCount,
+                failedFiles,
+                total: fileHandles.length
+            };
+        }
 
+        // Show File System Access API button if supported
+        if (supportsFileSystemAccess) {
+            document.getElementById('fsaContainer').style.display = 'block';
+        }
+        
+        // Store file handles for deletion
+        let selectedFileHandles = [];
+        
+        // File System Access API file picker
+        document.getElementById('fsaButton').addEventListener('click', async function() {
+            try {
+                const fileHandles = await window.showOpenFilePicker({
+                    multiple: true,
+                    types: [{
+                        description: 'All files',
+                        accept: { '*/*': [] }
+                    }]
+                });
+                
+                // Convert file handles to File objects for the form
+                const files = [];
+                selectedFileHandles = [];
+                
+                for (const handle of fileHandles) {
+                    const file = await handle.getFile();
+                    files.push(file);
+                    selectedFileHandles.push(handle);
+                }
+                
+                // Create a new FileList-like object
+                const dt = new DataTransfer();
+                files.forEach(file => dt.items.add(file));
+                document.getElementById('fileInput').files = dt.files;
+                
+                // Auto-check the delete checkbox
+                document.getElementById('deleteAfterUpload').checked = true;
+                
+                alert(`Selected ${files.length} file(s) with auto-delete capability`);
+                
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('File selection failed:', error);
+                    alert('File selection failed: ' + error.message);
+                }
+            }
+        });
+        
         // Handle form submission with hash verification
         document.getElementById('uploadForm').addEventListener('submit', async function(e) {
             const deleteAfterUpload = document.getElementById('deleteAfterUpload').checked;
             
             // If delete option is not checked, use normal form submission
             if (!deleteAfterUpload) {
+                selectedFileHandles = []; // Clear handles
                 return true;
             }
             
@@ -264,14 +350,33 @@
                             'Upload verified! Files can be safely deleted from your device.' :
                             'Upload completed! Files can be safely deleted from your device.';
                         
-                        // Show success message
-                        setTimeout(() => {
-                            const message = useHashVerification ? 
-                                `✅ Successfully uploaded and verified ${files.length} file(s).\n\nYou can now safely delete these files from your device.` :
-                                `✅ Successfully uploaded ${files.length} file(s).\n\nYou can now safely delete these files from your device.`;
-                            alert(message);
-                            window.location.reload();
-                        }, 1000);
+                        // Auto-delete files if File System Access API was used
+                        if (selectedFileHandles.length > 0) {
+                            progressText.textContent = 'Deleting files from device...';
+                            const deleteResult = await deleteFilesFromDevice(selectedFileHandles);
+                            
+                            if (deleteResult.success) {
+                                const message = `✅ Upload successful!\n\n• Uploaded: ${files.length} file(s)\n• Auto-deleted: ${deleteResult.deletedCount} file(s)${deleteResult.failedFiles.length > 0 ? '\n• Failed to delete: ' + deleteResult.failedFiles.join(', ') : ''}`;
+                                setTimeout(() => {
+                                    alert(message);
+                                    window.location.reload();
+                                }, 1000);
+                            } else {
+                                setTimeout(() => {
+                                    alert(`✅ Upload successful!\n\n⚠️ Auto-delete failed: ${deleteResult.reason || 'Unknown error'}\n\nPlease manually delete the files from your device.`);
+                                    window.location.reload();
+                                }, 1000);
+                            }
+                        } else {
+                            // Show normal success message
+                            setTimeout(() => {
+                                const message = useHashVerification ? 
+                                    `✅ Successfully uploaded and verified ${files.length} file(s).\n\nYou can now safely delete these files from your device.` :
+                                    `✅ Successfully uploaded ${files.length} file(s).\n\nYou can now safely delete these files from your device.`;
+                                alert(message);
+                                window.location.reload();
+                            }, 1000);
+                        }
                         
                         return;
                     }
