@@ -1,0 +1,15 @@
+# Filebox Configuration File
+# Lines starting with # are comments
+
+# Upload folder path (can be relative or absolute)
+# Examples:
+# uploads
+# /home/pi/Documents/uploads
+# /var/lib/filebox/uploads
+UPLOAD_FOLDER=uploads
+
+# User credentials file path
+USER_CREDENTIALS_FILE=user_credentials.txt
+
+# Secret key for Flask sessions (change this!)
+SECRET_KEY=your_secret_key_here

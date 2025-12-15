@@ -10,8 +10,46 @@ import hashlib
 import json
 from werkzeug.utils import secure_filename
 
+# Load configuration from file
+def load_config():
+    config = {
+        'UPLOAD_FOLDER': 'uploads',
+        'USER_CREDENTIALS_FILE': 'user_credentials.txt',
+        'SECRET_KEY': 'your_secret_key_here'
+    }
+    
+    try:
+        if os.path.exists('config.txt'):
+            with open('config.txt', 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        if '=' in line:
+                            key, value = line.split('=', 1)
+                            config[key.strip()] = value.strip()
+    except Exception as e:
+        print(f"Warning: Could not load config.txt: {e}")
+    
+    return config
+
+# Check if config has changed and reload if needed
+def get_current_upload_folder():
+    current_config = load_config()
+    new_folder = current_config['UPLOAD_FOLDER']
+    
+    # Update app config if changed
+    if app.config['UPLOAD_FOLDER'] != new_folder:
+        app.logger.info(f"Upload folder changed from {app.config['UPLOAD_FOLDER']} to {new_folder}")
+        app.config['UPLOAD_FOLDER'] = new_folder
+        # Ensure new directory exists
+        os.makedirs(new_folder, exist_ok=True)
+    
+    return app.config['UPLOAD_FOLDER']
+
+config = load_config()
+
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
 # Support all common file types
 app.config['ALLOWED_EXTENSIONS'] = {
     # Images
@@ -29,8 +67,8 @@ app.config['ALLOWED_EXTENSIONS'] = {
     # Other
     'csv', 'sql', 'log', 'ini', 'cfg', 'conf'
 }
-app.config['USER_CREDENTIALS_FILE'] = 'user_credentials.txt'
-app.secret_key = 'your_secret_key_here'
+app.config['USER_CREDENTIALS_FILE'] = config['USER_CREDENTIALS_FILE']
+app.secret_key = config['SECRET_KEY']
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
 
 # Flask-Login setup
@@ -177,7 +215,8 @@ def create_thumbnail(path):
     try:
         img = Image.open(path)
         img.thumbnail(THUMBNAIL_SIZE, Image.LANCZOS)
-        thumb_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs')
+        upload_folder = get_current_upload_folder()
+        thumb_dir = os.path.join(upload_folder, 'thumbs')
         os.makedirs(thumb_dir, exist_ok=True)
         thumb_path = os.path.join(thumb_dir, os.path.basename(path))
         img.save(thumb_path)
@@ -195,9 +234,10 @@ def index():
     per_page = 50  # Items per page
 
     # Get sorted files (newest first)
+    upload_folder = get_current_upload_folder()
     files = []
-    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-        path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    for filename in os.listdir(upload_folder):
+        path = os.path.join(upload_folder, filename)
         if allowed_file(filename) and os.path.isfile(path):
             files.append({
                 'name': filename,
@@ -255,13 +295,15 @@ def logout():
 @app.route('/uploads/<filename>')
 @login_required
 def serve_file(filename):
+    upload_folder = get_current_upload_folder()
     mime_type = get_file_mime_type(filename)
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename, mimetype=mime_type)
+    return send_from_directory(upload_folder, filename, mimetype=mime_type)
 
 @app.route('/thumbs/<filename>')
 @login_required
 def serve_thumbnail(filename):
-    thumb_dir = os.path.join(app.config['UPLOAD_FOLDER'], 'thumbs')
+    upload_folder = get_current_upload_folder()
+    thumb_dir = os.path.join(upload_folder, 'thumbs')
     return send_from_directory(thumb_dir, filename)
     
 def calculate_file_hash(file_path):
@@ -303,7 +345,8 @@ def upload_file():
                     results.append({'filename': file.filename, 'success': False, 'error': 'Invalid filename'})
                 continue
             
-            target_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            upload_folder = get_current_upload_folder()
+            target_path = os.path.join(upload_folder, filename)
             original_filename = filename
             
             # Handle filename conflicts
@@ -312,7 +355,7 @@ def upload_file():
                 counter = 1
                 while True:
                     new_filename = f"{base}_{counter}{ext}"
-                    new_target = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                    new_target = os.path.join(upload_folder, new_filename)
                     if not os.path.exists(new_target):
                         filename = new_filename
                         target_path = new_target
@@ -376,7 +419,8 @@ def upload_file():
 
 @app.route('/delete/<filename>')
 def delete_file(filename):
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    upload_folder = get_current_upload_folder()
+    file_path = os.path.join(upload_folder, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
         flash(f'Deleted: {filename}', 'success')
