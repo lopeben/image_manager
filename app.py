@@ -92,6 +92,17 @@ app.config['USER_CREDENTIALS_FILE'] = config['USER_CREDENTIALS_FILE']
 app.secret_key = config['SECRET_KEY']
 app.config['REMEMBER_COOKIE_DURATION'] = 30 * 24 * 3600  # 30 days
 
+# Debug: Print current limits
+print(f"Flask upload limits: MAX_CONTENT_LENGTH={app.config['MAX_CONTENT_LENGTH']//1024//1024}MB, MAX_FILE_SIZE={app.config['MAX_FILE_SIZE']//1024//1024}MB")
+
+# Handle 413 Request Entity Too Large
+@app.errorhandler(413)
+def too_large(e):
+    return json.dumps({
+        'success': False, 
+        'error': f'Upload too large. Max total: {app.config["MAX_CONTENT_LENGTH"]//1024//1024}MB, Max per file: {app.config["MAX_FILE_SIZE"]//1024//1024}MB'
+    }), 413
+
 # Flask-Login setup
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -250,6 +261,31 @@ def create_thumbnail(path):
 import re
 from datetime import datetime
 from collections import defaultdict
+from PIL.ExifTags import TAGS
+
+def extract_date_from_metadata(file_path):
+    """Extract date from file metadata (EXIF for images)"""
+    try:
+        # For images, try EXIF data
+        if file_path.lower().endswith(('.jpg', '.jpeg', '.tiff', '.tif')):
+            with Image.open(file_path) as img:
+                exif = img._getexif()
+                if exif:
+                    # Try different date fields in order of preference
+                    date_fields = ['DateTimeOriginal', 'DateTime', 'DateTimeDigitized']
+                    for field in date_fields:
+                        for tag_id, value in exif.items():
+                            tag = TAGS.get(tag_id, tag_id)
+                            if tag == field and value:
+                                try:
+                                    return datetime.strptime(value, '%Y:%m:%d %H:%M:%S').date()
+                                except ValueError:
+                                    continue
+    except Exception as e:
+        # Silently fail and let other methods handle it
+        pass
+    
+    return None
 
 def extract_date_from_filename(filename):
     """Extract date from filename patterns like 20241225_123456.jpg or 2024-12-25_12:34:56.jpg"""
@@ -289,10 +325,14 @@ def index():
     for filename in os.listdir(upload_folder):
         path = os.path.join(upload_folder, filename)
         if allowed_file(filename) and os.path.isfile(path):
-            # Try to extract date from filename first
-            file_date = extract_date_from_filename(filename)
+            # Try to extract date in order of preference:
+            # 1. File metadata (EXIF for images)
+            file_date = extract_date_from_metadata(path)
             if not file_date:
-                # Fallback to file modification date
+                # 2. Filename patterns
+                file_date = extract_date_from_filename(filename)
+            if not file_date:
+                # 3. File modification date (fallback)
                 file_date = datetime.fromtimestamp(os.path.getmtime(path)).date()
             
             files.append({
