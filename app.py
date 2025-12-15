@@ -15,7 +15,9 @@ def load_config():
     config = {
         'UPLOAD_FOLDER': 'uploads',
         'USER_CREDENTIALS_FILE': 'user_credentials.txt',
-        'SECRET_KEY': 'your_secret_key_here'
+        'SECRET_KEY': 'your_secret_key_here',
+        'MAX_CONTENT_LENGTH': 500,  # MB
+        'MAX_FILE_SIZE': 50  # MB
     }
     
     try:
@@ -26,9 +28,25 @@ def load_config():
                     if line and not line.startswith('#'):
                         if '=' in line:
                             key, value = line.split('=', 1)
-                            config[key.strip()] = value.strip()
+                            key = key.strip()
+                            value = value.strip()
+                            
+                            # Convert MB values to bytes for Flask
+                            if key in ['MAX_CONTENT_LENGTH', 'MAX_FILE_SIZE']:
+                                try:
+                                    config[key] = int(value) * 1024 * 1024
+                                except ValueError:
+                                    print(f"Warning: Invalid {key} value: {value}")
+                            else:
+                                config[key] = value
     except Exception as e:
         print(f"Warning: Could not load config.txt: {e}")
+    
+    # Convert default MB to bytes if not loaded from config
+    if isinstance(config['MAX_CONTENT_LENGTH'], int) and config['MAX_CONTENT_LENGTH'] < 1000:
+        config['MAX_CONTENT_LENGTH'] *= 1024 * 1024
+    if isinstance(config['MAX_FILE_SIZE'], int) and config['MAX_FILE_SIZE'] < 1000:
+        config['MAX_FILE_SIZE'] *= 1024 * 1024
     
     return config
 
@@ -50,6 +68,9 @@ config = load_config()
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config['UPLOAD_FOLDER']
+# Configure upload limits from config
+app.config['MAX_CONTENT_LENGTH'] = config['MAX_CONTENT_LENGTH']
+app.config['MAX_FILE_SIZE'] = config['MAX_FILE_SIZE']
 # Support all common file types
 app.config['ALLOWED_EXTENSIONS'] = {
     # Images
@@ -374,6 +395,17 @@ def upload_file():
     # Check if this is an AJAX request for hash verification
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     
+    # Check for file size errors
+    try:
+        if request.content_length and request.content_length > app.config['MAX_CONTENT_LENGTH']:
+            error_msg = f'Total upload size too large. Maximum: {app.config["MAX_CONTENT_LENGTH"] // (1024*1024)}MB'
+            if is_ajax:
+                return json.dumps({'success': False, 'error': error_msg}), 413
+            flash(error_msg, 'error')
+            return redirect(url_for('index'))
+    except Exception as e:
+        app.logger.error(f'Error checking content length: {str(e)}')
+    
     if 'files' not in request.files:
         if is_ajax:
             return json.dumps({'success': False, 'error': 'No file part'}), 400
@@ -398,6 +430,18 @@ def upload_file():
                 failure_count += 1
                 if is_ajax:
                     results.append({'filename': file.filename, 'success': False, 'error': 'Invalid filename'})
+                continue
+            
+            # Check individual file size
+            file.seek(0, 2)  # Seek to end
+            file_size = file.tell()
+            file.seek(0)  # Reset to beginning
+            
+            if file_size > app.config['MAX_FILE_SIZE']:
+                failure_count += 1
+                max_size_mb = app.config['MAX_FILE_SIZE'] // (1024*1024)
+                if is_ajax:
+                    results.append({'filename': file.filename, 'success': False, 'error': f'File too large (max {max_size_mb}MB)'})
                 continue
             
             upload_folder = get_current_upload_folder()
