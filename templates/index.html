@@ -72,8 +72,8 @@
             {% for group in date_groups %}
                 <div class="date-group">
                     <div class="date-header">
-                        <h3>📅 {{ group.date.strftime('%B %d, %Y') }}</h3>
-                        <span class="file-count">{{ group.count }} file{{ 's' if group.count != 1 else '' }}</span>
+                        <h3>{{ group.date.strftime('%b %d, %Y') }}</h3>
+                        <span class="file-count">{{ group.count }}</span>
                     </div>
                     
                     <div class="gallery">
