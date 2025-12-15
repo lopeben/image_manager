@@ -590,54 +590,63 @@ button.logout {
 
 /* Date Grouping Styles */
 .date-group {
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .date-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    padding: 8px 16px;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .date-header h3 {
     margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2c3e50;
 }
 
 .file-count {
-    background: rgba(255, 255, 255, 0.2);
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.9rem;
+    background: #e9ecef;
+    color: #6c757d;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
     font-weight: 500;
 }
 
 /* Enhanced gallery for date groups */
 .date-group .gallery {
     margin-top: 0;
-    padding-left: 10px;
+    padding-left: 5px;
 }
 
 /* Mobile responsiveness for date headers */
 @media (max-width: 768px) {
     .date-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 10px;
+        padding: 4px 8px;  /* This is where you adjust mobile thickness */
     }
     
     .date-header h3 {
-        font-size: 1.2rem;
+        font-size: 0.95rem;
+    }
+    
+    .file-count {
+        font-size: 0.7rem;
+        padding: 1px 4px;
     }
     
     .date-group .gallery {
         padding-left: 0;
+    }
+    
+    .date-group {
+        margin-bottom: 20px;
     }
 }
